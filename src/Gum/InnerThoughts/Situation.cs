@@ -76,8 +76,9 @@ namespace Gum.InnerThoughts
                     }
                     else
                     {
-                        Debug.Fail("I don't understand this scenario fully, please debug this.");
-                        // Remove the last block and create a new one?
+                        // Unexpected shape when switching an edge with more than one block. Report it as a
+                        // diagnostic instead of aborting the process via Debug.Fail in a Debug editor build.
+                        OutputHelpers.WriteError("Unable to switch dialog relationship: unexpected block layout.");
                     }
 
                     return true;
@@ -207,7 +208,12 @@ namespace Gum.InnerThoughts
 
             foreach (int parent in blocksToBeJoined)
             {
-                JoinBlock(block, edge, parent, kind);
+                if (!JoinBlock(block, edge, parent, kind))
+                {
+                    // The join failed (e.g. an else '(...)' without a prior condition). Bail so the
+                    // caller can report this against the offending line instead of leaving a corrupt graph.
+                    return null;
+                }
             }
 
             return block;
@@ -266,7 +272,9 @@ namespace Gum.InnerThoughts
                         return true;
                     }
 
-                    Debug.Fail("Empty edge?");
+                    // Empty edge: this happens on a malformed script such as an else '(...)' with no
+                    // prior condition to attach to. Return false so AddBlock surfaces a diagnostic
+                    // with the offending line number rather than aborting the process via Debug.Fail.
                     return false;
             }
 
