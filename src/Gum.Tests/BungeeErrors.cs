@@ -20,6 +20,21 @@ namespace Gum.Tests
         }
 
         [TestMethod]
+        public void MalformedColonLine_DoesNotThrow()
+        {
+            // A dialogue line whose first word starts with ':' used to index speakerText[-1]
+            // and throw IndexOutOfRangeException with no line information.
+            const string situationText = @"
+=Encounter
+    : hello there";
+
+            CharacterScript? script = Read(situationText);
+
+            // The line is simply treated as text with no speaker; parsing must succeed gracefully.
+            Assert.IsNotNull(script);
+        }
+
+        [TestMethod]
         public void ElseConditionWithoutPriorCondition_ReturnsNullInsteadOfAborting()
         {
             // An '(...)' else block with no prior condition used to hit Debug.Fail("Empty edge?"),

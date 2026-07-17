@@ -105,7 +105,9 @@ namespace Gum
 
             // First, check if there is a speaker specified and look for the escape token.
             end = speakerText.IndexOf(Tokens.SpeakerToken);
-            if (end == -1 || speakerText[end - 1] == Tokens.EscapeToken)
+            // 'end <= 0' guards a line that starts with ':' (e.g. a typo like ": hello"): there is no
+            // speaker before the colon, so treat it as plain text instead of indexing speakerText[-1].
+            if (end <= 0 || speakerText[end - 1] == Tokens.EscapeToken)
             {
                 return (speaker, portrait);
             }
