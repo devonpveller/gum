@@ -711,12 +711,20 @@ namespace Gum.InnerThoughts
             return false;
         }
 
-        public void PopLastBlock()
+        /// <summary>
+        /// Pops the last tracked block, unless this is already the only (root) block.
+        /// Returns whether a block was actually popped, so callers that pop in a loop can
+        /// detect when they have hit the floor instead of spinning forever.
+        /// </summary>
+        public bool PopLastBlock()
         {
             if (_lastBlocks.Count > 1)
             {
                 _ = _lastBlocks.Pop();
+                return true;
             }
+
+            return false;
         }
 
         private Edge LastEdge => Edges[_lastBlocks.Peek()];

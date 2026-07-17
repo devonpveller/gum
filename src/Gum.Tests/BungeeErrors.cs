@@ -20,6 +20,24 @@ namespace Gum.Tests
         }
 
         [TestMethod]
+        [Timeout(5000)]
+        public void DedentedChoiceWithoutChoiceAncestor_DoesNotHang()
+        {
+            // A dedented '>' choice with no matching choice block used to spin forever, because
+            // PopLastBlock floors at the root block and the loop had no exit. It must now bail
+            // with a diagnostic and a null script instead of hanging the editor thread.
+            const string situationText = @"
+=a
+    (x)
+        line one
+> what";
+
+            CharacterScript? script = Read(situationText);
+
+            Assert.IsNull(script);
+        }
+
+        [TestMethod]
         public void MalformedColonLine_DoesNotThrow()
         {
             // A dialogue line whose first word starts with ':' used to index speakerText[-1]

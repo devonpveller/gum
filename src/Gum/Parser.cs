@@ -405,13 +405,23 @@ namespace Gum
                                 {
                                     while (true)
                                     {
+                                        // Look for the choice "root" at this indentation. Use TryGetValue so a
+                                        // missing entry is a miss rather than a KeyNotFoundException.
                                         if (_script.CurrentSituation.PeekLastEdgeKind() == EdgeKind.Choice &&
-                                            _blockToIndentationIndices[_script.CurrentSituation.PeekLastBlock().Id] == _indentationIndex)
+                                            _blockToIndentationIndices.TryGetValue(_script.CurrentSituation.PeekLastBlock().Id, out int choiceIndent) &&
+                                            choiceIndent == _indentationIndex)
                                         {
                                             break;
                                         }
 
-                                        _script.CurrentSituation.PopLastBlock();
+                                        // PopLastBlock refuses to pop the root block, so if we run out of
+                                        // ancestors there is no choice block to attach this '>' to. Bail with a
+                                        // diagnostic instead of spinning forever.
+                                        if (!_script.CurrentSituation.PopLastBlock())
+                                        {
+                                            OutputHelpers.WriteError($"Unexpected choice '{(char)TokenChar.ChoiceBlock}' with no matching choice block on line {index}.");
+                                            return false;
+                                        }
                                     }
 
                                     // since the last block
